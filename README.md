@@ -1,1 +1,2 @@
 # mean-square-displacement
+These two scripts help obtain element-wise decomposed mean square displacement from a VASP Molecular Dynamics run reading the XDATCAR file. In a directory with XDATCAR, you should first run the xdarcar2xyz script and when it finishes, run the msd script. It should calculate the element-wise decomposed MSD. The scripts have been working fine for me (for vasp version 5 and later) but I highly recommend doing some tests to make sure it works for your system and the results are meaningful.
