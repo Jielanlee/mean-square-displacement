@@ -40,6 +40,8 @@ def MSD(xyz_file,L):
 
     msd = [] #Stores atom-wise MSD  Stores msd as [msd]
     msd_dict ={} #Stores element-wise MSD
+    msd_lattice = []
+    msd_dict_lattice ={}
 
     element_list = [] # element list
     element_dict = {} # number of elements stored
@@ -49,6 +51,7 @@ def MSD(xyz_file,L):
 
     for i in range(N):
         msd.append(np.float64('0.0'))
+        msd_lattice.append([0.0, 0.0, 0.0 ])
 
     file.readline()
     step = 0
@@ -61,7 +64,7 @@ def MSD(xyz_file,L):
                 t = file.readline().rstrip('\n').split()
                 element = t[0]
                 if element not in element_list:
-                    element_list.append(element) 
+                    element_list.append(element)
                 if element not in element_dict:
                     element_dict[element] = 1.0
                 else:
@@ -89,7 +92,7 @@ def MSD(xyz_file,L):
             element = t[0]
             coords = np.array( [ float(s) for s in t[1:] ] )
             wrapped_list.append([element,coords])
-         
+
         coord_rec.write(str(N)+ "\ncomment\n")
 
 # Unwrap coodinates and get MSD
@@ -97,11 +100,11 @@ def MSD(xyz_file,L):
         for atom in range(N):
 
             msd[atom] = 0.0
-  
+
             coord_rec.write(wrapped_list[atom][0])
 
             # decompose wrapped atom coordinates to onto lattice vectors:
-	    w1 = wrapped_list[atom][1][0]
+            w1 = wrapped_list[atom][1][0]
             w2 = wrapped_list[atom][1][1]
             w3 = wrapped_list[atom][1][2]
 
@@ -109,8 +112,8 @@ def MSD(xyz_file,L):
             p1 = prev_list[atom][1][0]
             p2 = prev_list[atom][1][1]
             p3 = prev_list[atom][1][2]
-            
-            #get distance between periodic images and use the smallest one                        
+
+            #get distance between periodic images and use the smallest one
             if np.fabs(w1 - p1) > 0.5:
                  u1 = w1 - p1 - np.sign(w1 - p1)
             else:
@@ -131,32 +134,37 @@ def MSD(xyz_file,L):
             unwrapped_list[atom][1][0] += u1
             unwrapped_list[atom][1][1] += u2
             unwrapped_list[atom][1][2] += u3
-            
+
             uw = unwrapped_list[atom][1][0]*a[0] + unwrapped_list[atom][1][1]*a[1] +unwrapped_list[atom][1][2]*a[2]
             ol = origin_list[atom][1][0]*a[0] + origin_list[atom][1][1]*a[1] + origin_list[atom][1][2]*a[2]
-            
-            msd[atom] = np.linalg.norm(uw-ol)**2 
+
+            msd[atom] = np.linalg.norm(uw-ol)**2
+            msd_lattice[atom] = [np.linalg.norm(uw[0]-ol[0])**2,np.linalg.norm(uw[1]-ol[1])**2,np.linalg.norm(uw[2]-ol[2])**2]
 #            print msd[atom]
+#            print msd_lattice[atom]
             coord_rec.write(" " + np.array_str(uw).replace("[","").replace("]",""))
-            coord_rec.write("\n") 
+            coord_rec.write("\n")
 
         prev_list = [] # Store current wrapped coordinates for the next step
         prev_list = deepcopy(wrapped_list)
 # record msd
         recorder.write(str(step) + " ")
-           
-        for el in element_list:
-             msd_dict[el] = 0.0
-            
-        for atom in range(len(msd)):
-            msd_dict[wrapped_list[atom][0]] += msd[atom]/element_dict[wrapped_list[atom][0]]
 
         for el in element_list:
-            recorder.write(str(msd_dict[el])+ " ")
+             msd_dict[el] = 0.0
+             msd_dict_lattice[el]=[0.,0.,0.]
+
+        for atom in range(len(msd)):
+            msd_dict[wrapped_list[atom][0]] += msd[atom]/element_dict[wrapped_list[atom][0]]
+            for i in range(3):
+                msd_dict_lattice[wrapped_list[atom][0]][i] += msd_lattice[atom][i]/element_dict[wrapped_list[atom][0]]
+
+        for el in element_list:
+            recorder.write(str(msd_dict[el])+ " " + str(msd_dict_lattice[el][0])+ " " + str(msd_dict_lattice[el][1])+ " " + str(msd_dict_lattice[el][2])+ " ")
 
         recorder.write("\n")
         if step % 10 == 0:
-            print step 
+            print step
     recorder.close()
     file.close()
     coord_rec.close()
@@ -179,3 +187,4 @@ lattice = read_lat_vec()
 
 #Run the MSD calculator with XDATCAR_fract.xyz and the lattice vector defined above
 MSD("XDATCAR_fract.xyz",lattice)
+
