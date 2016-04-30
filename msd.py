@@ -58,7 +58,7 @@ def MSD(xyz_file,L):
 
     while True:
         step += 1
-# Get and store the origin coordinates in origin_dict at first step
+        # Get and store the origin coordinates in origin_dict at first step
         if step == 1:
             for i in xrange(N):
                 t = file.readline().rstrip('\n').split()
@@ -71,7 +71,7 @@ def MSD(xyz_file,L):
                     element_dict[element] += 1.0
                 coords = np.array( [ float(s) for s in t[1:] ] )
                 origin_list.append([element,coords])
-      # Copy the first set of coordinates as prev_dict and unwrapped
+            # Copy the first set of coordinates as prev_dict and unwrapped
             unwrapped_list = deepcopy(origin_list)
             prev_list = deepcopy(origin_list)
             recorder.write("step ")
@@ -79,7 +79,7 @@ def MSD(xyz_file,L):
                 recorder.write(element+" ")
             recorder.write("\n")
 
-# Read wrapped coordinates into wrapped_dict
+        # Read wrapped coordinates into wrapped_dict
         content = file.readline()
         if len(content) == 0:
             print "\n---End of file---\n"
@@ -95,7 +95,7 @@ def MSD(xyz_file,L):
 
         coord_rec.write(str(N)+ "\ncomment\n")
 
-# Unwrap coodinates and get MSD
+        # Unwrap coodinates and get MSD
 
         for atom in range(N):
 
@@ -140,14 +140,13 @@ def MSD(xyz_file,L):
 
             msd[atom] = np.linalg.norm(uw-ol)**2
             msd_lattice[atom] = [np.linalg.norm(uw[0]-ol[0])**2,np.linalg.norm(uw[1]-ol[1])**2,np.linalg.norm(uw[2]-ol[2])**2]
-#            print msd[atom]
-#            print msd_lattice[atom]
+
             coord_rec.write(" " + np.array_str(uw).replace("[","").replace("]",""))
             coord_rec.write("\n")
 
         prev_list = [] # Store current wrapped coordinates for the next step
         prev_list = deepcopy(wrapped_list)
-# record msd
+        # record msd
         recorder.write(str(step) + " ")
 
         for el in element_list:
